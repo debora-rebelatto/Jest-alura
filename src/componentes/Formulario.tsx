@@ -1,8 +1,10 @@
 const Formulario = () => {
-    return (<form>
-        <input type="text" placeholder="Insira os nomes dos participantes"/>
-        <button disabled={true}>Adicionar</button>
-    </form>)
-}
+  return (
+    <form>
+      <input type="text" placeholder="Insira os nomes dos participantes" />
+      <button disabled={true}>Adicionar</button>
+    </form>
+  );
+};
 
-export default Formulario
+export default Formulario;
