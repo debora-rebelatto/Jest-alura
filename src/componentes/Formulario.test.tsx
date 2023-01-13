@@ -1,11 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
+import { RecoilRoot } from "recoil";
 import Formulario from "./Formulario";
 
 // Jest
 
 test("quando o input está vazio, novos participantes não podem ser adicionados", () => {
-  render(<Formulario />);
+  render(
+    <RecoilRoot>
+      <Formulario />
+    </RecoilRoot>
+  );
 
   // encontrar no DOM o input
   const input = screen.getByPlaceholderText(
@@ -25,7 +30,7 @@ test("quando o input está vazio, novos participantes não podem ser adicionados
   fireEvent.click(botao);
 
   // garantir que o input esteja com o foco (está ativo)
-  // expect(input).toHaveFocus();
+  expect(input).toHaveFocus();
 
   // garantir que o input esteja vazio
   expect(input).toHaveValue("");
