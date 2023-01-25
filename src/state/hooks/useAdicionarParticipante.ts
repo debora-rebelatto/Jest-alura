@@ -1,5 +1,5 @@
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { errorState, listaParticipantes, textState } from "../atom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { errorState, listaParticipantes } from "../atom";
 
 export const useAdicionarParticipante = () => {
   const setLista = useSetRecoilState(listaParticipantes);
@@ -9,6 +9,9 @@ export const useAdicionarParticipante = () => {
   return (nomeDoParticipante: string) => {
     if (lista.includes(nomeDoParticipante)) {
       setErrorStateValue("Participante já adicionado");
+      setTimeout(() => {
+        setErrorStateValue("");
+      }, 3000);
       return;
     }
     return setLista((lista: any) => [...lista, nomeDoParticipante]);
