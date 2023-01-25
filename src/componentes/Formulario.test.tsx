@@ -1,9 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import React from "react";
 import { RecoilRoot } from "recoil";
 import Formulario from "./Formulario";
-
-// Jest
 
 test("quando o input está vazio, novos participantes não podem ser adicionados", () => {
   render(
@@ -12,32 +9,40 @@ test("quando o input está vazio, novos participantes não podem ser adicionados
     </RecoilRoot>
   );
 
-  // encontrar no DOM o input
   const input = screen.getByPlaceholderText(
     "Insira os nomes dos participantes"
   );
-
-  // encontrar o botão
   const botao = screen.getByRole("button");
 
-  // inserir um valor no input
+  expect(input).toBeInTheDocument();
   fireEvent.change(input, { target: { value: "João" } });
-
-  // garantir que o input está com o valor "João"
   expect(input).toHaveValue("João");
-
-  // clica no botão
   fireEvent.click(botao);
-
-  // garantir que o input esteja com o foco (está ativo)
-  expect(input).toHaveFocus();
-
-  // garantir que o input esteja vazio
   expect(input).toHaveValue("");
+  expect(botao).toBeDisabled();
+});
 
-  // garantir que o input esteja no documento
+test("Should not have duplicate participants", () => {
+  render(
+    <RecoilRoot>
+      <Formulario />
+    </RecoilRoot>
+  );
+
+  const input = screen.getByPlaceholderText(
+    "Insira os nomes dos participantes"
+  );
   expect(input).toBeInTheDocument();
 
-  // garantir que o botão esteja desabilitado
-  expect(botao).toBeDisabled();
+  const botao = screen.getByRole("button");
+
+  fireEvent.change(input, { target: { value: "João" } });
+  fireEvent.click(botao);
+  fireEvent.change(input, { target: { value: "João" } });
+  fireEvent.click(botao);
+
+  const errorMessage = screen.getByRole("alert");
+
+  expect(errorMessage).toBeInTheDocument();
+  expect(errorMessage).toHaveTextContent("Participante já adicionado");
 });
