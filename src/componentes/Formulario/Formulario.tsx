@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { useAdicionarParticipante } from "../state/hooks/useAdicionarParticipante";
-import { useErrorMessage } from "../state/hooks/useErrorMessage";
+import { useAdicionarParticipante } from "../../state/hooks/useAdicionarParticipante";
+import { useErrorMessage } from "../../state/hooks/useErrorMessage";
 
 const Formulario = () => {
   const [nome, setNome] = useState<string>("");
