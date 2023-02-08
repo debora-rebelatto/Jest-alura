@@ -1,3 +1,7 @@
+# Jest Alura
+
+This project was created to learn how to use Jest to test React applications.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
