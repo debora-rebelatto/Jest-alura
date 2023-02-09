@@ -1,13 +1,19 @@
 # Jest
 
+Testes unitários são fundamentais para desenvolver um software robusto e confiável que permite aos desenvolvedores refatorar e adicionar novas funcionalidades conforme necessário com pouca preocupação quanto a introdução de novos bugs ou comportamento regressivo. Como o próprio nome indica, testes unitários (ou de unidade) testam a menor parte verificável de um software, ou seja, uma função ou até mesmo um componente visual que possui idealmente apenas uma entrada (no máximo duas) e uma saída.
+Para tanto, é necessário em primeiro lugar escrever código que seja testável. Consideramos um código testável quando este é fracamente acoplado, um componente ou uma função não devem saber mais que o necessário sobre o funcionamento de outras, por exemplo: um componente visual que possui diversas regras de negócio em seu interior que dependem de outras funções que são recebidas por props.  
+Devemos sempre ter em mente que componentes visuais devem ser o mais burros possível, não devem ter conhecimentos maiores que qual dado deve ser exibido e como. Um componente visual não deve ter em seu interior lógica para tratamento de dados, implementação de regras de negócio ou requisições para obtenção de dados.
+
+Essa metodologia de testagem é muito utilizada para testar em isolamento, garantindo que o comportamento de algum módulo não seja modificado por alterações em qualquer parte do código. Testes unitários rodam rápido e devem ser rodados com frequência durante o processo de desenvolvimento para que se tenha um acompanhamento quanto às mudanças feitas no código.
+
 Jest é uma das ferramentas de testes mais populares e amplamente utilizadas para aplicações feitas em React. Com sua simplicidade e flexibilidade, ele permite que você crie testes unitários, integração e snapshots para sua aplicação de forma eficiente e confiável. Além disso, Jest é altamente integrado ao React, o que significa que você pode escrever testes que simulam interações com componentes de forma fácil e precisa.
 
 Vamos explorar os principais conceitos de testes e como utilizar o Jest para testar uma aplicação React.
 
-Para utilizar jest, você precisa instalar o pacote `jest` e o pacote `react-test-renderer`:
+Para utilizar jest, você precisa instalar o pacote `jest` e o pacote `@testing-library/jest-dom`:
 
 ```bash
-$ npm install --save-dev jest react-test-renderer
+$ npm install --save-dev jest @testing-library/jest-dom
 ```
 
 Para executar todos os testes, você pode utilizar o comando `jest` no terminal:
@@ -41,7 +47,6 @@ Para parar a execução dos testes após o primeiro erro, você pode utilizar a 
 $ jest --bail
 ```
 
-
 Para saber mais sobre as flags disponíveis, você pode consultar a [documentação oficial](https://jestjs.io/docs/en/cli).
 
 ## Principais conceitos de testes
@@ -51,29 +56,29 @@ Testes unitários são utilizados para garantir que cada parte da sua aplicaçã
 
 ```js
 import React from "react";
-import { shallow } from "enzyme";
+import { render, screen } from "@testing-library/react";
 import MyComponent from "./MyComponent";
 
 describe("MyComponent", () => {
   it("renders correctly", () => {
-    const wrapper = shallow(<MyComponent />);
-    expect(wrapper).toMatchSnapshot();
+    render(<MyComponent />);
+    expect(screen.getByText("This is some data")).toBeInTheDocument();
   });
 
   it("displays the correct data", () => {
-    const wrapper = shallow(<MyComponent />);
-    const data = wrapper.find(".data").text();
-    expect(data).toBe("This is some data");
+    render(<MyComponent />);
+    const data = screen.getByText("This is some data");
+    expect(data).toBeInTheDocument();
   });
 });
 ```
 
-**2. Testes de Integração**
-Testes de integração são utilizados para garantir que diferentes partes da sua aplicação estejam funcionando corretamente juntas. Por exemplo, você pode testar se um componente se comunica corretamente com uma API ou se um componente está renderizando o conteúdo correto quando recebe uma prop.
+**2. Mocking**
+Mocking é utilizado para substituir partes da sua aplicação por versões simplificadas, que podem ser utilizadas para testar a aplicação. Por exemplo, você pode mockar uma API para testar se um componente está se comunicando corretamente com ela.
 
 ```js
 import React from "react";
-import { mount } from "enzyme";
+import { render, waitFor } from "@testing-library/react";
 import MyComponent from "./MyComponent";
 
 jest.mock("./api", () => {
@@ -84,27 +89,65 @@ jest.mock("./api", () => {
 
 describe("MyComponent", () => {
   it("fetches data from API", async () => {
-    const wrapper = mount(<MyComponent />);
-    await wrapper.instance().fetchData();
-    wrapper.update();
-    const data = wrapper.find(".data").text();
-    expect(data).toBe("This is some data");
+    render(<MyComponent />);
+    await waitFor(() =>
+      expect(screen.getByText("This is some data")).toBeInTheDocument()
+    );
   });
 });
 ```
 
-**3. Testes de Snapshot**
-Testes de snapshot são utilizados para garantir que o conteúdo renderizado por um componente não foi alterado. Por exemplo, você pode testar se um componente continua renderizando o mesmo conteúdo quando recebe diferentes props.
+**3. Testes de Integração**
+Testes de integração são utilizados para garantir que diferentes partes da sua aplicação estejam funcionando corretamente juntas. Por exemplo, você pode testar se um componente se comunica corretamente com uma API ou se um componente está renderizando o conteúdo correto quando recebe uma prop.
 
 ```js
 import React from "react";
-import { shallow } from "enzyme";
+import { render, waitFor } from "@testing-library/react";
+import MyComponent from "./MyComponent";
+
+jest.mock("./api", () => {
+  return {
+    fetchData: () => Promise.resolve({ data: "This is some data" }),
+  };
+});
+
+describe("MyComponent", () => {
+  it("fetches data from API", async () => {
+    render(<MyComponent />);
+    await waitFor(() =>
+      expect(screen.getByText("This is some data")).toBeInTheDocument()
+    );
+  });
+});
+```
+
+**4. Testes de Snapshot**
+Testes de snapshot são utilizados para garantir que o conteúdo renderizado por um componente não foi alterado. Por exemplo, você pode testar se um componente continua renderizando o mesmo conteúdo quando recebe diferentes props.
+
+Testes de snapshot são particularmente úteis para componentes visuais, pois eles garantem que a aparência e comportameno do componente se mantém consistente ao longo do tempo. Quando uma alteração é feita, o teste falha e o desenvolvedor pode decidir se a alteração é esperada ou não.
+
+O Snapshot irá criar um arquivo dentro da pasta `__snapshots__` com o mesmo nome do arquivo de teste. Por exemplo, o arquivo `MyComponent.test.js` irá gerar o arquivo `MyComponent.test.js.snap`. O conteúdo do arquivo de snapshot é um JSON que contém o conteúdo renderizado do componente. Por exemplo:
+
+```json
+// __snapshots__/MyComponent.test.js.snap
+exports[`MyComponent renders correctly 1`] = `
+<div>
+  <h1>
+    This is some data
+  </h1>
+</div>
+`;
+```
+
+```js
+import React from "react";
+import { render } from "@testing-library/react";
 import MyComponent from "./MyComponent";
 
 describe("MyComponent", () => {
   it("renders correctly", () => {
-    const wrapper = shallow(<MyComponent />);
-    expect(wrapper).toMatchSnapshot();
+    const { asFragment } = render(<MyComponent />);
+    expect(asFragment()).toMatchSnapshot();
   });
 });
 ```
@@ -115,33 +158,16 @@ Para atualizar testes de snapshot, você pode utilizar o seguinte comando no ter
 $ jest --update-snapshot
 ```
 
-**4. Mocking**
-Mocking é utilizado para substituir partes da sua aplicação por versões simplificadas, que podem ser utilizadas para testar a aplicação. Por exemplo, você pode mockar uma API para testar se um componente está se comunicando corretamente com ela.
+**5. Act, Arrange, Assert (AAA)**
+Act (Atuar), Arrange (Organizar) e Assert (Assegurar) é um padrão de teste que consiste em dividir os testes em três partes.
 
-```js
-import React from "react";
-import { shallow } from "enzyme";
-import MyComponent from "./MyComponent";
+- **Act**: A primeira parte do teste consiste em executar a ação que você deseja testar. Por exemplo, você pode clicar em um botão ou enviar um formulário.
 
-jest.mock("./api", () => {
-  return {
-    fetchData: () => Promise.resolve({ data: "This is some data" }),
-  };
-});
+- **Arrange**: A segunda parte do teste consiste em preparar o ambiente para a ação que você deseja testar. Por exemplo, você pode renderizar um componente ou mockar uma API.
 
-describe("MyComponent", () => {
-  it("fetches data from API", async () => {
-    const wrapper = shallow(<MyComponent />);
-    await wrapper.instance().fetchData();
-    wrapper.update();
-    const data = wrapper.find(".data").text();
-    expect(data).toBe("This is some data");
-  });
-});
-```
+- **Assert**: A terceira parte do teste consiste em fazer asserções sobre o resultado da ação que você deseja testar. Por exemplo, você pode verificar se o estado de um componente foi atualizado corretamente.
 
-**5. Asserções**
-Jest fornece uma biblioteca de asserções, que permite que os desenvolvedores escrevam testes que façam asserções específicas sobre o comportamento de seus componentes. Por exemplo, você pode afirmar que um componente é renderizado corretamente, ou que o estado de um componente é atualizado corretamente quando um evento ocorre.
+Jest fornece uma biblioteca de asserções, que permite que os desenvolvedores escrevam testes que fazem asserções específicas sobre o comportamento de seus componentes. Por exemplo, você pode afirmar que um componente é renderizado corretamente, ou que o estado de um componente é atualizado corretamente quando um evento ocorre.
 
 **6. Testes de Cobertura**
 Jest tem suporte para testes de cobertura, que permite que os desenvolvedores verifiquem a cobertura de seus testes. Por exemplo, você pode verificar se todos os componentes e funções da sua aplicação estão sendo testados.
@@ -154,28 +180,9 @@ $ jest --coverage
 
 Este comando vai gerar um relatório de cobertura, que pode ser visualizado no seu terminal. Para uma visualização mais detalhada, você pode abrir o arquivo `coverage/lcov-report/index.html` no seu navegador.
 
-**7. Testes de Performance**
+Apesar de testes de cobertura serem úteis, eles não devem ser utilizados como uma métrica para a qualidade dos testes. Por exemplo, você pode ter uma cobertura de 100%, mas ainda assim ter testes que não estão testando o comportamento correto da sua aplicação. Por isso, é importante escrever testes que realmente testem o comportamento da sua aplicação.
 
-```js
-import React from "react";
-import { shallow } from "enzyme";
-import MyComponent from "./MyComponent";
-
-describe("MyComponent", () => {
-  it("renders correctly", () => {
-    const wrapper = shallow(<MyComponent />);
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("updates state correctly", () => {
-    const wrapper = shallow(<MyComponent />);
-    wrapper.find(".button").simulate("click");
-    expect(wrapper.state().isOpen).toBe(true);
-  });
-});
-```
-
-## Testando uma aplicação React
+## Configurando uma aplicação React + TS com Jest
 
 Iremos criar uma aplicação React simples para demonstrar como utilizar Jest para testar uma aplicação React. Você pode encontrar o código-fonte desta aplicação no repositório do GitHub.
 
@@ -223,129 +230,40 @@ my-app
 
 A pasta src contém o código-fonte da nossa aplicação. Dentro desta pasta, temos o arquivo App.tsx, que é o componente principal da nossa aplicação. O arquivo App.test.tsx contém os testes unitários para o componente App. O arquivo setupTests.ts é responsável por configurar o ambiente de testes do Jest. Por fim, a pasta public contém os arquivos estáticos da aplicação, como o index.html e o favicon.
 
+## Configurando o Jest
 
-
-
-```js
-describe("Teste do componente App", () => {
-  it("Deve renderizar o componente App", () => {
-    const { getByText } = render(<App />);
-    expect(getByText("Hello World")).toBeInTheDocument();
-  });
-});
-```
-
-O teste acima é um teste unitário para o componente App. O teste consiste em renderizar o componente App e verificar se o texto "Hello World" está presente na tela. Para executar o teste, execute o seguinte comando no terminal:
-
-```bash
-yarn test
-```
+Antes de escrever qualquer teste, precisamos configurar o Jest para que ele possa encontrar os testes e executá-los corretamente. Para isso, vamos criar um arquivo de configuração do Jest na raiz do projeto. Para isso, crie um arquivo chamado jest.config.js na raiz do projeto e adicione o seguinte conteúdo:
 
 ```js
-jest.mock("../state/hook/useListaDeParticipantes", () => {
-  return {
-    useListaDeParticipantes: jest.fn(),
-  };
-});
-
-const mockNavegacao = jest.fn();
-
-jest.mock("react-router-dom", () => {
-  return {
-    useNavigate: () => mockNavegacao,
-  };
-});
+module.exports = {
+  testEnvironment: "jsdom",
+  rootDir: ".",
+  modulePaths: ["<rootDir>"],
+  moduleDirectories: ["node_modules", "src"],
+  setupFilesAfterEnv: ["<rootDir>/setupJest.js"],
+};
 ```
 
-Aqui estamos definindo mocks para os hooks useListaDeParticipantes e useNavigate. O hook useListaDeParticipantes é um hook que retorna a lista de participantes. O hook useNavigate é um hook que retorna uma função para navegar para uma determinada rota. Como não queremos testar o comportamento destes hooks, vamos definir mocks para estes hooks. O mock do hook useListaDeParticipantes irá retornar uma lista vazia. O mock do hook useNavigate irá retornar uma função vazia.
+A configuração acima irá configurar o Jest para que ele execute os testes em um ambiente de DOM. Além disso, ele irá configurar o Jest para que ele execute os testes dentro da pasta src. Por fim, ele irá configurar o Jest para que ele execute o arquivo setupJest.js antes de executar os testes.
 
-<!-- explique os testes abaixo -->
+Agora, vamos criar o arquivo setupJest.js na raiz do projeto. Este arquivo irá configurar o ambiente de testes do Jest. Para isso, adicione o seguinte conteúdo ao arquivo:
 
 ```js
-describe("quando não existem participantes suficientes", () => {
-  beforeEach(() => {
-    (useListaDeParticipantes as jest.Mock).mockReturnValue([]);
-  });
-  test("a brincadeira não pode ser iniciada", () => {
-    render(
-      <RecoilRoot>
-        <Rodape />
-      </RecoilRoot>
-    );
-    const botao = screen.getByRole("button");
-    expect(botao).toBeDisabled();
-  });
-});
+require("jest-fetch-mock").enableMocks();
 
-describe("quando existem participantes suficientes", () => {
-  beforeEach(() => {
-    (useListaDeParticipantes as jest.Mock).mockReturnValue([
-      "Ana",
-      "Catarina",
-      "Josefina",
-    ]);
-  });
-  test("a brincadeira pode ser iniciada", () => {
-    render(
-      <RecoilRoot>
-        <Rodape />
-      </RecoilRoot>
-    );
-    const botao = screen.getByRole("button");
-    expect(botao).not.toBeDisabled();
-  });
-  test("a brincadeira foi iniciada", () => {
-    render(
-      <RecoilRoot>
-        <Rodape />
-      </RecoilRoot>
-    );
-    const botao = screen.getByRole("button");
-    fireEvent.click(botao);
-
-    expect(mockNavegacao).toHaveBeenCalledTimes(1);
-    expect(mockNavegacao).toHaveBeenCalledWith("/sorteio");
-  });
-});
-
+import "@testing-library/jest-dom/extend-expect";
 ```
 
-```js
-const mockNavegacao = jest.fn();
+O primeiro comando irá configurar o Jest para que ele possa mockar funções do fetch. O segundo comando irá adicionar asserções customizadas para o Jest.
 
-jest.mock("react-router-dom", () => {
-  return {
-    useNavigate: () => mockNavegacao,
-  };
-});
+## Adicionar o Jest ao package.json
 
-describe("a pagina de configuracao", () => {
-  test("deve ser renderizada corretamente", () => {
-    const { container } = render(
-      <RecoilRoot>
-        <Configuracao />
-      </RecoilRoot>
-    );
+Para que o Jest possa ser executado através do comando `yarn test`, precisamos adicionar o Jest ao package.json. Para isso, adicione o seguinte conteúdo ao package.json:
 
-    expect(container).toMatchSnapshot();
-  });
-});
+```json
+{
+  "scripts": {
+    "test": "jest"
+  }
+}
 ```
-
-To make performance tests on a ReactJS app, you can use the performance testing tools provided by Jest, React, and other testing libraries. Here is a general outline of the process:
-
-Identify performance-critical parts of your ReactJS app: This could include heavy data processing, complex UI interactions, etc.
-
-Use the React's useEffect hook to measure the time it takes for a component to render and update. You can use the performance.mark and performance.measure methods to create a performance measurement and report it in the browser's developer tools.
-
-Set up Jest tests to measure the performance of these components. You can use Jest's test method to write tests that measure the performance of your components and compare them against performance thresholds.
-
-Use Jest's beforeAll and afterAll methods to run the performance tests before and after each test run, to ensure that the performance tests don't interfere with other tests.
-
-Use Jest's expect method to make assertions about the performance of your components. For example, you could expect that a component takes no longer than a certain amount of time to render, or that its performance does not degrade over time.
-
-Continuously monitor the performance of your ReactJS app using Jest and other performance testing tools.
-
-Optimize the performance of your ReactJS app by making changes based on the results of your performance tests.
-
-It's important to note that performance testing can be a complex and time-consuming process, and it's best to approach it incrementally, starting with the most critical parts of your app and expanding your performance tests as needed.
