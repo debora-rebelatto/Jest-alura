@@ -267,3 +267,11 @@ Para que o Jest possa ser executado através do comando `yarn test`, precisamos 
   }
 }
 ```
+
+# Conclusão
+Testes são uma parte vital do desenvolvimento de software, ajudando a garantir a qualidade e a confiabilidade do seu código. Eles também podem ajudar a prevenir regressões futuras e a facilitar a manutenção e a evolução do seu aplicativo.
+
+É importante lembrar que os testes são apenas uma parte de uma abordagem de qualidade de software completa. É fundamental combinar os testes com práticas de codificação sólidas, design orientado a dados e planejamento eficaz para garantir o sucesso a longo prazo do seu aplicativo.
+
+Em suma, utilizar Jest para testar aplicativos React é uma ótima maneira de garantir a qualidade e a confiabilidade do seu código, permitindo que você evolua com confiança e forneça aos seus usuários uma experiência excelente.
+
