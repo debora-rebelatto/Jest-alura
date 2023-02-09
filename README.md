@@ -1,7 +1,5 @@
 # Jest Alura
 
-Tutorial de [Jest]('./tutorial/jest.md')
-
 This project was created to learn how to use Jest to test React applications.
 
 # Getting Started with Create React App
